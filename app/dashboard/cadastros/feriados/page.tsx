@@ -8,59 +8,63 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import api from "@/lib/axios";
 
-interface Filial {
+interface Feriado {
   id: number;
-  inscricao?: string;
-  email?: string;
-  idEmpresa?: number;
+  dataFeriado: string;
+  descricao: string;
+  tipoFeriado: number;
+  idFilial?: number;
+  feriadoParcial?: boolean;
+  horaInicio?: string;
+  horaFinal?: string;
   createdAt: string;
 }
 
-export default function FiliaisPage() {
+export default function FeriadosPage() {
   const router = useRouter();
-  const [filiais, setFiliais] = useState<Filial[]>([]);
-  const [empresas, setEmpresas] = useState<{ id: number; razaoSocial?: string }[]>([]);
-  const [filtroEmpresa, setFiltroEmpresa] = useState<string>("");
+  const [feriados, setFeriados] = useState<Feriado[]>([]);
+  const [filiais, setFiliais] = useState<{ id: number; descricao: string }[]>([]);
+  const [filtroFilial, setFiltroFilial] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    loadEmpresas();
     loadFiliais();
-  }, [filtroEmpresa]);
-
-  const loadEmpresas = async () => {
-    try {
-      const response = await api.get("/empresas").catch(() => ({ data: [] }));
-      setEmpresas(response.data);
-    } catch (error) {
-      setEmpresas([]);
-    }
-  };
+    loadFeriados();
+  }, [filtroFilial]);
 
   const loadFiliais = async () => {
     try {
-      setLoading(true);
-      const params = filtroEmpresa ? { idEmpresa: filtroEmpresa } : {};
-      const response = await api.get("/filiais", { params });
+      const response = await api.get("/filiais").catch(() => ({ data: [] }));
       setFiliais(response.data);
+    } catch (error) {
+      setFiliais([]);
+    }
+  };
+
+  const loadFeriados = async () => {
+    try {
+      setLoading(true);
+      const params = filtroFilial ? { idFilial: filtroFilial } : {};
+      const response = await api.get("/feriados", { params });
+      setFeriados(response.data);
     } catch (error: any) {
-      setError("Erro ao carregar filiais");
+      setError("Erro ao carregar feriados");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir esta filial?")) {
+    if (!confirm("Tem certeza que deseja excluir este feriado?")) {
       return;
     }
 
     try {
-      await api.delete(`/filiais/${id}`);
-      loadFiliais();
+      await api.delete(`/feriados/${id}`);
+      loadFeriados();
     } catch (error: any) {
-      setError("Erro ao excluir filial");
+      setError("Erro ao excluir feriado");
     }
   };
 
@@ -75,11 +79,11 @@ export default function FiliaisPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Filiais</h1>
-        <Link href="/dashboard/cadastros/filiais/new">
+        <h1 className="text-2xl font-bold text-gray-900">Feriados</h1>
+        <Link href="/dashboard/cadastros/feriados/new">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Nova Filial
+            Novo Feriado
           </Button>
         </Link>
       </div>
@@ -87,16 +91,16 @@ export default function FiliaisPage() {
       <div className="mb-4 flex items-center gap-4">
         <div className="w-64">
           <Select
-            label="Filtrar por Empresa"
+            label="Filtrar por Filial"
             options={[
               { value: "", label: "Todas" },
-              ...empresas.map((empresa) => ({
-                value: empresa.id.toString(),
-                label: empresa.razaoSocial || `Empresa ${empresa.id}`,
+              ...filiais.map((filial) => ({
+                value: filial.id.toString(),
+                label: filial.descricao,
               })),
             ]}
-            value={filtroEmpresa}
-            onChange={(e) => setFiltroEmpresa(e.target.value)}
+            value={filtroFilial}
+            onChange={(e) => setFiltroFilial(e.target.value)}
           />
         </div>
       </div>
@@ -112,16 +116,19 @@ export default function FiliaisPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Inscrição
+                Data
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
+                Descrição
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Empresa
+                Tipo
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Data de Cadastro
+                Filial
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Parcial
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ações
@@ -129,39 +136,42 @@ export default function FiliaisPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filiais.length === 0 ? (
+            {feriados.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                  Nenhuma filial cadastrada
+                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  Nenhum feriado cadastrado
                 </td>
               </tr>
             ) : (
-              filiais.map((filial) => (
-                <tr key={filial.id} className="hover:bg-gray-50">
+              feriados.map((feriado) => (
+                <tr key={feriado.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {filial.inscricao || "-"}
+                    {new Date(feriado.dataFeriado).toLocaleDateString("pt-BR")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {filial.email || "-"}
+                    {feriado.descricao}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {filial.idEmpresa ? empresas.find((e) => e.id === filial.idEmpresa)?.razaoSocial || "-" : "-"}
+                    {feriado.tipoFeriado === 1 ? "Nacional" : feriado.tipoFeriado === 2 ? "Estadual" : feriado.tipoFeriado === 3 ? "Municipal" : "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(filial.createdAt).toLocaleDateString("pt-BR")}
+                    {feriado.idFilial ? filiais.find((f) => f.id === feriado.idFilial)?.descricao || "-" : "Todas"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {feriado.feriadoParcial ? "Sim" : "Não"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() =>
-                          router.push(`/dashboard/cadastros/filiais/edit/${filial.id}`)
+                          router.push(`/dashboard/cadastros/feriados/edit/${feriado.id}`)
                         }
                         className="text-primary-600 hover:text-primary-900"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(filial.id)}
+                        onClick={() => handleDelete(feriado.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -177,3 +187,4 @@ export default function FiliaisPage() {
     </div>
   );
 }
+

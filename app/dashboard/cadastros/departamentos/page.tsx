@@ -8,59 +8,59 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import api from "@/lib/axios";
 
-interface Filial {
+interface Departamento {
   id: number;
-  inscricao?: string;
-  email?: string;
-  idEmpresa?: number;
+  codigo: number;
+  descricao: string;
+  idDivisao: number;
   createdAt: string;
 }
 
-export default function FiliaisPage() {
+export default function DepartamentosPage() {
   const router = useRouter();
-  const [filiais, setFiliais] = useState<Filial[]>([]);
-  const [empresas, setEmpresas] = useState<{ id: number; razaoSocial?: string }[]>([]);
-  const [filtroEmpresa, setFiltroEmpresa] = useState<string>("");
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [divisoes, setDivisoes] = useState<{ id: number; descricao: string }[]>([]);
+  const [filtroDivisao, setFiltroDivisao] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    loadEmpresas();
-    loadFiliais();
-  }, [filtroEmpresa]);
+    loadDivisoes();
+    loadDepartamentos();
+  }, [filtroDivisao]);
 
-  const loadEmpresas = async () => {
+  const loadDivisoes = async () => {
     try {
-      const response = await api.get("/empresas").catch(() => ({ data: [] }));
-      setEmpresas(response.data);
+      const response = await api.get("/divisoes").catch(() => ({ data: [] }));
+      setDivisoes(response.data);
     } catch (error) {
-      setEmpresas([]);
+      setDivisoes([]);
     }
   };
 
-  const loadFiliais = async () => {
+  const loadDepartamentos = async () => {
     try {
       setLoading(true);
-      const params = filtroEmpresa ? { idEmpresa: filtroEmpresa } : {};
-      const response = await api.get("/filiais", { params });
-      setFiliais(response.data);
+      const params = filtroDivisao ? { idDivisao: filtroDivisao } : {};
+      const response = await api.get("/departamentos", { params });
+      setDepartamentos(response.data);
     } catch (error: any) {
-      setError("Erro ao carregar filiais");
+      setError("Erro ao carregar departamentos");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir esta filial?")) {
+    if (!confirm("Tem certeza que deseja excluir este departamento?")) {
       return;
     }
 
     try {
-      await api.delete(`/filiais/${id}`);
-      loadFiliais();
+      await api.delete(`/departamentos/${id}`);
+      loadDepartamentos();
     } catch (error: any) {
-      setError("Erro ao excluir filial");
+      setError("Erro ao excluir departamento");
     }
   };
 
@@ -75,11 +75,11 @@ export default function FiliaisPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Filiais</h1>
-        <Link href="/dashboard/cadastros/filiais/new">
+        <h1 className="text-2xl font-bold text-gray-900">Departamentos</h1>
+        <Link href="/dashboard/cadastros/departamentos/new">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Nova Filial
+            Novo Departamento
           </Button>
         </Link>
       </div>
@@ -87,16 +87,16 @@ export default function FiliaisPage() {
       <div className="mb-4 flex items-center gap-4">
         <div className="w-64">
           <Select
-            label="Filtrar por Empresa"
+            label="Filtrar por Divisão"
             options={[
               { value: "", label: "Todas" },
-              ...empresas.map((empresa) => ({
-                value: empresa.id.toString(),
-                label: empresa.razaoSocial || `Empresa ${empresa.id}`,
+              ...divisoes.map((divisao) => ({
+                value: divisao.id.toString(),
+                label: divisao.descricao,
               })),
             ]}
-            value={filtroEmpresa}
-            onChange={(e) => setFiltroEmpresa(e.target.value)}
+            value={filtroDivisao}
+            onChange={(e) => setFiltroDivisao(e.target.value)}
           />
         </div>
       </div>
@@ -112,13 +112,13 @@ export default function FiliaisPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Inscrição
+                Código
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
+                Descrição
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Empresa
+                Divisão
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Data de Cadastro
@@ -129,39 +129,39 @@ export default function FiliaisPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filiais.length === 0 ? (
+            {departamentos.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                  Nenhuma filial cadastrada
+                  Nenhum departamento cadastrado
                 </td>
               </tr>
             ) : (
-              filiais.map((filial) => (
-                <tr key={filial.id} className="hover:bg-gray-50">
+              departamentos.map((departamento) => (
+                <tr key={departamento.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {filial.inscricao || "-"}
+                    {departamento.codigo}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {filial.email || "-"}
+                    {departamento.descricao}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {filial.idEmpresa ? empresas.find((e) => e.id === filial.idEmpresa)?.razaoSocial || "-" : "-"}
+                    {divisoes.find((d) => d.id === departamento.idDivisao)?.descricao || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(filial.createdAt).toLocaleDateString("pt-BR")}
+                    {new Date(departamento.createdAt).toLocaleDateString("pt-BR")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() =>
-                          router.push(`/dashboard/cadastros/filiais/edit/${filial.id}`)
+                          router.push(`/dashboard/cadastros/departamentos/edit/${departamento.id}`)
                         }
                         className="text-primary-600 hover:text-primary-900"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(filial.id)}
+                        onClick={() => handleDelete(departamento.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -177,3 +177,4 @@ export default function FiliaisPage() {
     </div>
   );
 }
+

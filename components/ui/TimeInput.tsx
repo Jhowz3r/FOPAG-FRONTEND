@@ -3,12 +3,12 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-interface DateInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface TimeInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
+export const TimeInput = React.forwardRef<HTMLInputElement, TimeInputProps>(
   ({ className, label, error, ...props }, ref) => {
     return (
       <div className="w-full">
@@ -20,12 +20,13 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         )}
         <input
           ref={ref}
-          type="date"
+          type="time"
+          step="1"
           className={cn(
             "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors",
             error
               ? "border-red-500 focus:ring-red-500"
-              : "border-gray-300",
+              : "border-gray-300 focus:border-primary-500",
             className
           )}
           {...props}
@@ -38,6 +39,5 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
   }
 );
 
-DateInput.displayName = "DateInput";
-
+TimeInput.displayName = "TimeInput";
 

@@ -5,62 +5,51 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
 import api from "@/lib/axios";
 
-interface Filial {
+interface Horario {
   id: number;
-  inscricao?: string;
-  email?: string;
-  idEmpresa?: number;
+  descricao: string;
+  horasTrabalhadasMes?: number;
+  horasTrabalhadasSemana?: number;
+  diasTrabalhadosSemana?: number;
+  horarioFlexivel?: boolean;
+  possuiHorarioNoturno?: boolean;
   createdAt: string;
 }
 
-export default function FiliaisPage() {
+export default function HorariosPage() {
   const router = useRouter();
-  const [filiais, setFiliais] = useState<Filial[]>([]);
-  const [empresas, setEmpresas] = useState<{ id: number; razaoSocial?: string }[]>([]);
-  const [filtroEmpresa, setFiltroEmpresa] = useState<string>("");
+  const [horarios, setHorarios] = useState<Horario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    loadEmpresas();
-    loadFiliais();
-  }, [filtroEmpresa]);
+    loadHorarios();
+  }, []);
 
-  const loadEmpresas = async () => {
-    try {
-      const response = await api.get("/empresas").catch(() => ({ data: [] }));
-      setEmpresas(response.data);
-    } catch (error) {
-      setEmpresas([]);
-    }
-  };
-
-  const loadFiliais = async () => {
+  const loadHorarios = async () => {
     try {
       setLoading(true);
-      const params = filtroEmpresa ? { idEmpresa: filtroEmpresa } : {};
-      const response = await api.get("/filiais", { params });
-      setFiliais(response.data);
+      const response = await api.get("/horarios");
+      setHorarios(response.data);
     } catch (error: any) {
-      setError("Erro ao carregar filiais");
+      setError("Erro ao carregar horários");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir esta filial?")) {
+    if (!confirm("Tem certeza que deseja excluir este horário?")) {
       return;
     }
 
     try {
-      await api.delete(`/filiais/${id}`);
-      loadFiliais();
+      await api.delete(`/horarios/${id}`);
+      loadHorarios();
     } catch (error: any) {
-      setError("Erro ao excluir filial");
+      setError("Erro ao excluir horário");
     }
   };
 
@@ -75,30 +64,13 @@ export default function FiliaisPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Filiais</h1>
-        <Link href="/dashboard/cadastros/filiais/new">
+        <h1 className="text-2xl font-bold text-gray-900">Horários</h1>
+        <Link href="/dashboard/cadastros/horarios/new">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Nova Filial
+            Novo Horário
           </Button>
         </Link>
-      </div>
-
-      <div className="mb-4 flex items-center gap-4">
-        <div className="w-64">
-          <Select
-            label="Filtrar por Empresa"
-            options={[
-              { value: "", label: "Todas" },
-              ...empresas.map((empresa) => ({
-                value: empresa.id.toString(),
-                label: empresa.razaoSocial || `Empresa ${empresa.id}`,
-              })),
-            ]}
-            value={filtroEmpresa}
-            onChange={(e) => setFiltroEmpresa(e.target.value)}
-          />
-        </div>
       </div>
 
       {error && (
@@ -112,16 +84,22 @@ export default function FiliaisPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Inscrição
+                Descrição
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
+                Horas/Mês
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Empresa
+                Horas/Semana
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Data de Cadastro
+                Dias/Semana
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Flexível
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Noturno
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ações
@@ -129,39 +107,45 @@ export default function FiliaisPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filiais.length === 0 ? (
+            {horarios.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                  Nenhuma filial cadastrada
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  Nenhum horário cadastrado
                 </td>
               </tr>
             ) : (
-              filiais.map((filial) => (
-                <tr key={filial.id} className="hover:bg-gray-50">
+              horarios.map((horario) => (
+                <tr key={horario.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {filial.inscricao || "-"}
+                    {horario.descricao}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {filial.email || "-"}
+                    {horario.horasTrabalhadasMes || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {filial.idEmpresa ? empresas.find((e) => e.id === filial.idEmpresa)?.razaoSocial || "-" : "-"}
+                    {horario.horasTrabalhadasSemana || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(filial.createdAt).toLocaleDateString("pt-BR")}
+                    {horario.diasTrabalhadosSemana || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {horario.horarioFlexivel ? "Sim" : "Não"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {horario.possuiHorarioNoturno ? "Sim" : "Não"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() =>
-                          router.push(`/dashboard/cadastros/filiais/edit/${filial.id}`)
+                          router.push(`/dashboard/cadastros/horarios/edit/${horario.id}`)
                         }
                         className="text-primary-600 hover:text-primary-900"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(filial.id)}
+                        onClick={() => handleDelete(horario.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -177,3 +161,4 @@ export default function FiliaisPage() {
     </div>
   );
 }
+
